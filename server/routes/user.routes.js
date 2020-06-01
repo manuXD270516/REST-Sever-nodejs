@@ -7,7 +7,7 @@ const User = require('../models/user.model');
 
 
 app.get('/users', (req, res) => {
-
+    console.log('user');
     let {
         from,
         limit
@@ -27,8 +27,7 @@ app.get('/users', (req, res) => {
                         err
                     });
             }
-
-            User.count(conditions, (err, countRegister) => {
+            User.countDocuments(conditions, (err, countRegister) => {
                 return res.send({
                     ok: true,
                     users: usersRes,
@@ -98,11 +97,11 @@ app.delete('/users/:userId', (req, res) => {
     let changeState = {
         state: false
     };
-     let options = {
-         new: true,
-         //runValidators: true
-     };
-    User.findByIdAndUpdate(userId,changeState, options , (err, userRemove) => {
+    let options = {
+        new: true,
+        //runValidators: true
+    };
+    User.findByIdAndUpdate(userId, changeState, options, (err, userRemove) => {
         if (err) {
             return res.status(400)
                 .send({
