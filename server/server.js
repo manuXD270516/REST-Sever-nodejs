@@ -35,5 +35,11 @@ app.get('/', (req, res) => res.send({
     title: "Hello Manuel"
 }))
 
+app.get('/test', (req, res) => {
+    return res.send({
+        title: 'Example for nodejs'
+    });
+})
+
 
 app.listen(port, () => console.log(`Example app listening on port ${port}!`))
