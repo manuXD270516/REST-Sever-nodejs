@@ -28,7 +28,8 @@ app.use(bodyParser.urlencoded({
 // parse application/json
 app.use(bodyParser.json());
 
-app.use(require('./routes/user.routes'));
+
+app.use(require('./routes/index'));
 
 
 app.get('/', (req, res) => res.send({

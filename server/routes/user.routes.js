@@ -4,10 +4,10 @@ const bcrypt = require('bcrypt');
 const _ = require('underscore');
 
 const User = require('../models/user.model');
+const { verifyToken, verifyAdminRole } = require('../middlewares/auth');
 
 
-app.get('/users', (req, res) => {
-    console.log('user');
+app.get('/users',verifyToken, (req, res) => {
     let {
         from,
         limit
@@ -37,90 +37,76 @@ app.get('/users', (req, res) => {
         });
 })
 
-app.post('/users', (req, res) => {
+app.post('/users', [verifyToken, verifyAdminRole], (req, res) => {
+  let { body: userBody } = req;
 
-    let {
-        body: userBody
-    } = req;
-
-    userBody.password = bcrypt.hashSync(userBody.password, 10);
-    let user = new User(userBody); // parseo dinamico con el paquete body-express
-    user.save((err, userRes) => {
-        if (err) {
-            return res.status(400)
-                .send({
-                    err
-                });
-        }
-        return res.send({
-            ok: true,
-            userCreated: userRes
-        });
+  userBody.password = bcrypt.hashSync(userBody.password, 10);
+  let user = new User(userBody); // parseo dinamico con el paquete body-express
+  user.save((err, userRes) => {
+    if (err) {
+      return res.status(400).send({
+        err,
+      });
+    }
+    return res.send({
+      ok: true,
+      userCreated: userRes,
     });
-
-})
-
-
-app.put('/users/:userId', (req, res) => {
-    let {
-        userId
-    } = req.params;
-    let {
-        body: userBody
-    } = req;
-
-    userBody = _.pick(userBody, ['username', 'email', 'img', 'role', 'estadp']);
-    let options = {
-        new: true,
-        runValidators: true
-    };
-    User.findByIdAndUpdate(userId, userBody, options, (err, userRes) => {
-        if (err) {
-            return res.status(400)
-                .send({
-                    err
-                });
-        }
-        return res.send({
-            ok: true,
-            userUpdated: userRes
-        });
-    });
+  });
 });
 
-app.delete('/users/:userId', (req, res) => {
-    let {
-        userId
-    } = req.params;
 
-    //User.findByIdAndRemove(userId, (err, userRemove) => {
-    let changeState = {
-        state: false
-    };
-    let options = {
-        new: true,
-        //runValidators: true
-    };
-    User.findByIdAndUpdate(userId, changeState, options, (err, userRemove) => {
-        if (err) {
-            return res.status(400)
-                .send({
-                    err
-                });
-        }
-        if (!userRemove) {
-            return res.status(400)
-                .send({
-                    err: {
-                        message: 'user not found'
-                    }
-                });
-        }
-        return res.send({
-            ok: true,
-            userRemoved: userRemove
-        });
-    })
+app.put('/users/:userId', [verifyToken, verifyAdminRole], (req, res) => {
+  let { userId } = req.params;
+  let { body: userBody } = req;
+
+  userBody = _.pick(userBody, ['username', 'email', 'img', 'role', 'estadp']);
+  let options = {
+    new: true,
+    runValidators: true,
+  };
+  User.findByIdAndUpdate(userId, userBody, options, (err, userRes) => {
+    if (err) {
+      return res.status(400).send({
+        err,
+      });
+    }
+    return res.send({
+      ok: true,
+      userUpdated: userRes,
+    });
+  });
+});
+
+app.delete('/users/:userId', [verifyToken, verifyAdminRole], (req, res) => {
+  let { userId } = req.params;
+
+  //User.findByIdAndRemove(userId, (err, userRemove) => {
+  let changeState = {
+    state: false,
+  };
+  let options = {
+    new: true,
+    //runValidators: true
+  };
+  User.findByIdAndUpdate(userId, changeState, options, (err, userRemove) => {
+    if (err) {
+      return res.status(400).send({
+        err,
+      });
+    }
+    if (!userRemove) {
+      return res.status(400).send({
+        err: {
+          message: 'user not found',
+        },
+      });
+    }
+    return res.send({
+      ok: true,
+      userRemoved: userRemove,
+    });
+  });
 });
 
 module.exports = app;
